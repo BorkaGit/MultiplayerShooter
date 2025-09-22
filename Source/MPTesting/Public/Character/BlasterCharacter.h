@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BlasterTypes/TurningInPlace.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
@@ -34,10 +35,20 @@ public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
 
-	bool IsWeaponEquipped();
+	bool IsWeaponEquipped() const;
+
+	bool IsAiming() const;
+
+	AWeapon* GetEquippedWeapon() const;
+	
+	FORCEINLINE double GetAO_Yaw() const { return AO_Yaw; }
+	FORCEINLINE double GetAO_Pitch() const { return AO_Pitch; }
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void Jump() override;
 	
 	void Move(const FInputActionValue& Value);
 	
@@ -48,6 +59,12 @@ protected:
 	void CrouchStarted();
 
 	void CrouchFinished();
+
+	void AimButtonPressed();
+
+	void AimButtonReleased();
+
+	void AimOffset(float DeltaTime);
 	
 private:
 	
@@ -80,9 +97,22 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> CrouchAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> AimAction;
 	
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	TObjectPtr<AWeapon> OverlappingWeapon;
+
+	double AO_Yaw = 0.0;
+	double InterpAO_Yaw = 0.0;
+	double AO_Pitch = 0.0;
+	
+	FRotator StartingAimRotation;
+
+	ETurningInPlace TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+
+	void TurnInPlace(float DeltaTime);
 	
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
